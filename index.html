@@ -89,6 +89,13 @@
       box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.15);
     }
 
+    /* Style when auto-filled by marketing engine */
+    input[type="email"]:read-only {
+      background-color: #f1f5f9;
+      color: #334155;
+      cursor: not-allowed;
+    }
+
     button {
       width: 100%;
       background-color: var(--primary);
@@ -122,12 +129,12 @@
   <div class="card">
     <div class="brand">ZMC Associates</div>
     <h1>Email Preferences</h1>
-    <p class="description">
+    <p class="description" id="pageDesc">
       Confirm your email address below to unsubscribe from proposal and outreach communications.
     </p>
 
     <form action="https://api.web3forms.com/submit" method="POST">
-      <!-- REPLACE WITH YOUR WEB3FORMS ACCESS KEY -->
+      <!-- Web3Forms Access Key -->
       <input type="hidden" name="access_key" value="YOUR_WEB3FORMS_ACCESS_KEY_HERE">
       
       <!-- Notification Email Subject -->
@@ -150,12 +157,29 @@
   </div>
 
   <script>
-    // Grab the ?email= parameter from the URL and fill the input box
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const email = urlParams.get('email');
-      if (email) {
-        document.getElementById('emailInput').value = decodeURIComponent(email);
+      const rawEmail = urlParams.get('email');
+
+      if (!rawEmail) return;
+
+      const email = decodeURIComponent(rawEmail).trim();
+      const input = document.getElementById('emailInput');
+      const desc = document.getElementById('pageDesc');
+
+      // Regular expression to confirm it is a valid email format
+      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      // Ensure it is not an unparsed template bracket like {{email}} or *|EMAIL|*
+      const isTemplateTag = email.includes('{') || email.includes('}') || email.includes('*') || email.includes('%');
+
+      if (isValidEmail && !isTemplateTag) {
+        // Legitimate email passed from an email campaign tool
+        input.value = email;
+        input.setAttribute('readonly', 'true');
+        desc.textContent = `Click below to unsubscribe ${email} from proposal and outreach communications.`;
+      } else {
+        // Unparsed tag or manual link: leave input empty and clean
+        input.value = '';
       }
     });
   </script>
